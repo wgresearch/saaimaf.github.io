@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SA AI Maturity Assessment Framework — Interactive Dashboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap');
+
+  :root {
+    --teal-dark:   #0a615f;
+    --teal-mid:    #1c8a80;
+    --teal-light:  #39b59d;
+    --teal-pale:   #d6e7de;
+    --navy-deep:   #001538;
+    --navy-mid:    #081a47;
+    --navy-light:  #172d69;
+    --blue-accent: #004fb8;
+    --green-dark:  #298152;
+    --green-light: #7dba49;
+    --green-mint:  #63ebad;
+    --orange:      #da861a;
+    --yellow:      #e0c441;
+    --bg-warm:     #efefe6;
+    --bg-cream:    #f9f3da;
+    --bg-green:    #d6e7de;
+    --white:       #ffffff;
+    --text-dark:   #001538;
+    --text-mid:    #081a47;
+    --text-muted:  #4a5568;
+    --border:      #c8d8d0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', Helvetica, sans-serif;
+    background: var(--bg-warm);
+    color: var(--text-dark);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .site-header {
+    background: var(--navy-deep);
+    color: var(--white);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,21,56,.35);
+  }
+  .header-top {
+    background: var(--teal-dark);
+    padding: 6px 32px;
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.75);
+  }
+  .header-top span { color: var(--green-mint); font-weight: 600; }
+  .header-main {
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header-brand { display: flex; align-items: center; gap: 16px; }
+  .header-logo {
+    width: 44px; height: 44px;
+    background: var(--teal-mid);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .header-logo svg { width: 28px; height: 28px; }
+  .header-title { font-family: 'DM Serif Display', Georgia, serif; font-size: 18px; color: var(--white); line-height: 1.2; }
+  .header-subtitle { font-size: 11px; color: rgba(255,255,255,.55); letter-spacing: .05em; margin-top: 2px; }
+  .header-meta { font-size: 12px; color: rgba(255,255,255,.5); text-align: right; }
+  .header-meta strong { color: var(--green-mint); font-size: 13px; }
+  .nav-tabs {
+    display: flex;
+    border-top: 1px solid rgba(255,255,255,.08);
+    padding: 0 32px;
+    background: rgba(0,0,0,.2);
+  }
+  .nav-tab {
+    padding: 10px 20px;
+    font-size: 12px;
+    letter-spacing: .04em;
+    color: rgba(255,255,255,.55);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all .2s;
+    font-weight: 500;
+  }
+  .nav-tab:hover { color: rgba(255,255,255,.85); }
+  .nav-tab.active { color: var(--green-mint); border-bottom-color: var(--green-mint); }
+
+  .main-content { padding: 28px 32px; max-width: 1400px; margin: 0 auto; }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--white);
+    border-radius: 10px;
+    padding: 20px 22px;
+    border-top: 3px solid var(--teal-mid);
+    box-shadow: 0 1px 4px rgba(0,21,56,.08);
+  }
+  .stat-card.teal-card  { border-top-color: var(--teal-mid); }
+  .stat-card.navy-card  { border-top-color: var(--navy-light); }
+  .stat-card.green-card { border-top-color: var(--green-dark); }
+  .stat-card.orange-card{ border-top-color: var(--orange); }
+  .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; }
+  .stat-value { font-family: 'DM Serif Display', Georgia, serif; font-size: 36px; color: var(--navy-deep); line-height: 1; }
+  .stat-sub { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+  .stat-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-top: 6px; }
+  .badge-emerging { background: #e6f1dc; color: var(--green-dark); }
+  .badge-limited   { background: #f1d7d9; color: #6e2222; }
+
+  .section-title { font-family: 'DM Serif Display', Georgia, serif; font-size: 20px; color: var(--navy-deep); margin-bottom: 6px; }
+  .section-lead {
+    font-size: 13px; color: var(--text-muted); margin-bottom: 20px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-lead::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .domain-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .domain-card {
+    background: var(--white);
+    border-radius: 10px;
+    padding: 18px;
+    cursor: pointer;
+    transition: all .22s;
+    border: 1.5px solid transparent;
+    box-shadow: 0 1px 4px rgba(0,21,56,.07);
+  }
+  .domain-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,21,56,.12); border-color: var(--teal-light); }
+  .domain-card.active { border-color: var(--teal-mid); background: linear-gradient(135deg,#fff,#f0f8f6); box-shadow: 0 4px 16px rgba(10,97,95,.18); }
+  .domain-num { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--teal-mid); margin-bottom: 8px; }
+  .domain-name { font-size: 13px; font-weight: 600; color: var(--navy-deep); line-height: 1.3; margin-bottom: 14px; min-height: 36px; }
+  .domain-score-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .domain-score-big { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--navy-deep); line-height: 1; }
+  .domain-level-label { font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; }
+  .level-1 { background: #f1d7d9; color: #6e2222; }
+  .level-2 { background: #f7e8d3; color: #7a4800; }
+  .level-3 { background: #d6e7de; color: #298152; }
+  .level-4 { background: #e6f1dc; color: #1e6a3d; }
+  .level-5 { background: #c8f0e0; color: #0d5c30; }
+  .domain-bar-track { height: 6px; background: var(--bg-warm); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+  .domain-bar-fill  { height: 100%; border-radius: 3px; }
+
+  .detail-panel { background: var(--white); border-radius: 12px; box-shadow: 0 2px 12px rgba(0,21,56,.1); margin-bottom: 28px; overflow: hidden; display: none; }
+  .detail-panel.visible { display: block; }
+  .detail-header { background: var(--navy-deep); color: var(--white); padding: 24px 28px; display: flex; align-items: flex-start; gap: 24px; }
+  .detail-gauge-wrap { flex-shrink: 0; width: 110px; text-align: center; }
+  .detail-gauge-label { font-size: 11px; color: rgba(255,255,255,.55); margin-top: 6px; letter-spacing: .05em; }
+  .detail-info { flex: 1; }
+  .detail-domain-num { font-size: 11px; letter-spacing: .12em; color: var(--teal-light); text-transform: uppercase; margin-bottom: 6px; }
+  .detail-domain-title { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 10px; }
+  .detail-level-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .detail-level-pill { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: .05em; }
+  .detail-score-range { font-size: 12px; color: rgba(255,255,255,.6); }
+  .detail-score-range strong { color: var(--green-mint); }
+
+  .detail-body { padding: 24px 28px; }
+  .detail-tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+  .detail-tab { padding: 8px 16px; font-size: 12px; font-weight: 600; letter-spacing: .04em; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all .18s; text-transform: uppercase; }
+  .detail-tab:hover { color: var(--teal-dark); }
+  .detail-tab.active { color: var(--teal-dark); border-bottom-color: var(--teal-mid); }
+  .detail-tab-content { display: none; }
+  .detail-tab-content.active { display: block; }
+
+  .narrative-box { background: linear-gradient(135deg,var(--bg-green) 0%,var(--bg-warm) 100%); border-left: 3px solid var(--teal-mid); border-radius: 0 8px 8px 0; padding: 16px 20px; margin-bottom: 20px; font-size: 13px; color: var(--text-mid); line-height: 1.7; }
+  .narrative-box h4 { color: var(--teal-dark); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; font-weight: 700; }
+
+  .level-filters { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  .level-filter-label { font-size: 11px; color: var(--text-muted); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; margin-right: 4px; }
+  .level-filter-btn { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer; border: 1.5px solid transparent; transition: all .15s; letter-spacing: .04em; }
+  .level-filter-btn.inactive { opacity: .45; }
+
+  .indicator-grid { display: grid; gap: 12px; }
+  .indicator-card { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .indicator-card-header { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg-warm); cursor: pointer; user-select: none; }
+  .indicator-card-header:hover { background: #e8ede8; }
+  .indicator-score-dot { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: 'DM Serif Display', serif; font-size: 16px; color: var(--white); flex-shrink: 0; font-weight: 700; }
+  .indicator-name { font-size: 13px; font-weight: 600; color: var(--navy-deep); flex: 1; }
+  .indicator-subdomain { font-size: 11px; color: var(--text-muted); }
+  .indicator-body { padding: 14px 16px; font-size: 13px; color: var(--text-muted); line-height: 1.65; display: none; border-top: 1px solid var(--border); background: var(--white); }
+  .indicator-card.expanded .indicator-body { display: block; }
+  .indicator-body p { margin-bottom: 10px; }
+  .indicator-body p:last-child { margin-bottom: 0; }
+  .chevron { flex-shrink: 0; color: var(--text-muted); margin-left: 4px; transition: transform .2s; }
+  .indicator-card.expanded .chevron { transform: rotate(180deg); }
+
+  .search-wrap { margin-bottom: 20px; position: relative; }
+  .search-input { width: 100%; padding: 10px 16px 10px 40px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; color: var(--text-dark); background: var(--white); transition: border-color .15s; }
+  .search-input:focus { outline: none; border-color: var(--teal-mid); }
+  .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+
+  .levels-table { width: 100%; border-collapse: collapse; }
+  .levels-table th { background: var(--navy-deep); color: var(--white); padding: 8px 14px; text-align: left; font-size: 11px; letter-spacing: .07em; text-transform: uppercase; }
+  .levels-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: top; }
+  .levels-table tr:last-child td { border-bottom: none; }
+  .levels-table tr:nth-child(even) td { background: var(--bg-warm); }
+
+  .overview-chart-wrap { background: var(--white); border-radius: 10px; padding: 24px; box-shadow: 0 1px 4px rgba(0,21,56,.07); margin-bottom: 28px; }
+  .overview-chart-title { font-family: 'DM Serif Display', serif; font-size: 16px; color: var(--navy-deep); margin-bottom: 16px; }
+
+  .site-footer { background: var(--navy-deep); color: rgba(255,255,255,.45); text-align: center; padding: 20px 32px; font-size: 11px; letter-spacing: .04em; margin-top: 40px; }
+  .site-footer a { color: var(--teal-light); text-decoration: none; }
+
+  @media (max-width: 900px) {
+    .domain-grid { grid-template-columns: repeat(2,1fr); }
+    .summary-grid { grid-template-columns: repeat(2,1fr); }
+    .main-content { padding: 16px; }
+    .header-main { padding: 12px 16px; }
+    .nav-tabs { padding: 0 16px; overflow-x: auto; }
+  }
+
+  @keyframes fadeSlideIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  .domain-card { animation: fadeSlideIn .3s ease both; }
+  .domain-card:nth-child(1){animation-delay:.04s} .domain-card:nth-child(2){animation-delay:.08s}
+  .domain-card:nth-child(3){animation-delay:.12s} .domain-card:nth-child(4){animation-delay:.16s}
+  .domain-card:nth-child(5){animation-delay:.20s} .domain-card:nth-child(6){animation-delay:.24s}
+  .domain-card:nth-child(7){animation-delay:.28s} .domain-card:nth-child(8){animation-delay:.32s}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-top"><span>First Annual Assessment 2025</span></div>
+  <div class="header-main">
+    <div class="header-brand">
+      <div class="header-logo">
+        <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 3L25 8.5V19.5L14 25L3 19.5V8.5L14 3Z" stroke="white" stroke-width="1.5" fill="none"/>
+          <circle cx="14" cy="14" r="4" fill="white" opacity=".9"/>
+          <line x1="14" y1="3" x2="14" y2="10" stroke="white" stroke-width="1.2" opacity=".5"/>
+          <line x1="14" y1="18" x2="14" y2="25" stroke="white" stroke-width="1.2" opacity=".5"/>
+          <line x1="3" y1="8.5" x2="10" y2="12" stroke="white" stroke-width="1.2" opacity=".5"/>
+          <line x1="18" y1="16" x2="25" y2="19.5" stroke="white" stroke-width="1.2" opacity=".5"/>
+          <line x1="25" y1="8.5" x2="18" y2="12" stroke="white" stroke-width="1.2" opacity=".5"/>
+          <line x1="10" y1="16" x2="3" y2="19.5" stroke="white" stroke-width="1.2" opacity=".5"/>
+        </svg>
+      </div>
+      <div>
+        <div class="header-title">SA AI Maturity Assessment Framework</div>
+        <div class="header-subtitle">South Africa · Interactive Data Visualisation Dashboard</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div>Last updated: March 2025</div>
+      <div><strong>8 Domains · 68 Indicators</strong></div>
+    </div>
+  </div>
+  <nav class="nav-tabs">
+    <div class="nav-tab active" data-view="overview">Overview</div>
+    <div class="nav-tab" data-view="maturity">Maturity Scale</div>
+    <div class="nav-tab" data-view="about">About the Framework</div>
+  </nav>
+</header>
+
+<main class="main-content">
+
+  <div id="view-overview">
+    <div class="summary-grid">
+      <div class="stat-card teal-card">
+        <div class="stat-label">Overall Maturity Score</div>
+        <div class="stat-value" id="overallScore">—</div>
+        <div class="stat-sub">Average across 8 domains</div>
+        <span class="stat-badge badge-emerging" id="overallBadge">Emerging</span>
+      </div>
+      <div class="stat-card navy-card">
+        <div class="stat-label">Domains Assessed</div>
+        <div class="stat-value">8</div>
+        <div class="stat-sub">Full framework coverage</div>
+      </div>
+      <div class="stat-card green-card">
+        <div class="stat-label">Total Indicators</div>
+        <div class="stat-value">68</div>
+        <div class="stat-sub">Across all domains</div>
+      </div>
+      <div class="stat-card orange-card">
+        <div class="stat-label">Assessment Year</div>
+        <div class="stat-value">2025</div>
+        <div class="stat-sub">First annual iteration</div>
+      </div>
+    </div>
+
+    <div class="section-title">Domain Assessments</div>
+    <div class="section-lead">Click any domain card to explore indicators and findings</div>
+    <div class="domain-grid" id="domainGrid"></div>
+
+    <div class="detail-panel" id="detailPanel">
+      <div class="detail-header">
+        <div class="detail-gauge-wrap">
+          <canvas id="gaugeCanvas" width="110" height="90"></canvas>
+          <div class="detail-gauge-label">Maturity Score</div>
+        </div>
+        <div class="detail-info">
+          <div class="detail-domain-num" id="detailNum"></div>
+          <div class="detail-domain-title" id="detailTitle"></div>
+          <div class="detail-level-row" id="detailLevelRow"></div>
+        </div>
+        <div style="margin-left:auto;text-align:right;">
+          <div class="detail-score-range" id="detailScoreRange"></div>
+          <div style="margin-top:8px;font-size:12px;color:rgba(255,255,255,.45);" id="detailIndicatorCount"></div>
+        </div>
+      </div>
+      <div class="detail-body">
+        <div class="detail-tabs">
+          <div class="detail-tab active" data-tab="assessment">Assessment</div>
+          <div class="detail-tab" data-tab="indicators">All Indicators</div>
+          <div class="detail-tab" data-tab="levels">By Level</div>
+        </div>
+        <div class="detail-tab-content active" id="tab-assessment">
+          <div class="narrative-box" id="narrativeBox"></div>
+          <div class="level-filters" id="levelFilters"><span class="level-filter-label">Filter by level</span></div>
+          <div class="indicator-grid" id="indicatorGrid"></div>
+        </div>
+        <div class="detail-tab-content" id="tab-indicators">
+          <div class="search-wrap">
+            <span class="search-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+            <input class="search-input" id="indicatorSearch" type="text" placeholder="Search indicators…">
+          </div>
+          <div class="indicator-grid" id="allIndicatorGrid"></div>
+        </div>
+        <div class="detail-tab-content" id="tab-levels">
+          <table class="levels-table" id="levelsTable"></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-maturity" style="display:none;">
+    <div class="section-title" style="margin-bottom:6px;">ISO 37004-Inspired Maturity Scale</div>
+    <div class="section-lead" style="margin-bottom:24px;">Six-level evidence-based progression framework</div>
+    <div class="overview-chart-wrap" style="max-width:780px;">
+      <table class="levels-table" style="width:100%;">
+        <thead><tr><th>Level</th><th>Name</th><th>Description</th></tr></thead>
+        <tbody id="fullLevelsTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="view-about" style="display:none;">
+    <div class="overview-chart-wrap" style="max-width:720px;">
+      <div class="section-title" style="margin-bottom:16px;">About the AI Maturity Assessment Framework</div>
+      <div style="font-size:13px;color:var(--text-mid);line-height:1.85;">
+        <p style="margin-bottom:14px;">The <strong>South African AI Maturity Assessment Framework (AI MAF)</strong> was developed by the University of the Western Cape (UWC) in collaboration with GIZ FAIR Forward – Artificial Intelligence for All. It serves as a foundational tool for guiding South Africa's progress towards AI maturity, tailored to the country's unique socioeconomic, cultural, and technological realities.</p>
+        <p style="margin-bottom:14px;">The framework comprises <strong>eight domains</strong> spanning international profile, regulatory environment, citizen engagement, AI research, digital infrastructure, human capital, data governance, and security &amp; privacy. Each domain includes multiple sub-domains and indicators.</p>
+        <p style="margin-bottom:14px;">Assessment uses a <strong>five-point maturity scale (0–5)</strong> adapted from ISO 37004 (Governance Maturity Model), evaluating evidence of commitment and application across activities, inputs, outcomes, and continual improvement cycles.</p>
+        <p style="margin-bottom:0;">This dashboard was developed as a public digital good. The underlying data and framework are open-source. Adoption and adaptation are encouraged.</p>
+      </div>
+      <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);display:flex;gap:24px;font-size:12px;color:var(--text-muted);">
+        <div><strong style="color:var(--navy-deep);">Authors</strong><br>UWC Research Team &amp; GIZ FAIR Forward</div>
+        <div><strong style="color:var(--navy-deep);">Licence</strong><br>CC BY 4.0 International</div>
+        <div><strong style="color:var(--navy-deep);">Published</strong><br>March 2025</div>
+        <div><strong style="color:var(--navy-deep);">ISBN</strong><br>978-1-037-06512-5</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  SA AI Maturity Assessment Framework © 2025 · University of the Western Cape &amp; GIZ GmbH · <a href="#">CC BY 4.0</a>
+</footer>
+
+<script>
+const MATURITY_LEVELS = [
+  { num:0, name:'Undefined',  color:'#9ca3af', desc:'No evidence can be found of commitment to or application of the principle. Not measurable.' },
+  { num:1, name:'Limited',    color:'#b82f37', desc:'Where evidence is available, it is limited to that of performing the minimum necessary to achieve the intent of the principle.' },
+  { num:2, name:'Emerging',   color:'#da861a', desc:'Evidence is available and managed.' },
+  { num:3, name:'Formalised', color:'#298152', desc:'Evidence is available, managed, and aggregated to form a cohesive system in which emergent behaviours can be observed.' },
+  { num:4, name:'Measured',   color:'#004fb8', desc:'Evidence is available, managed, and aggregated, and it is measured or assessed.' },
+  { num:5, name:'Optimising', color:'#0a615f', desc:'Evidence is available, managed, aggregated and measured or assessed, and it is optimised for continual improvement.' },
+];
+
+const DOMAINS = [
+  {
+    id:1, name:'International and Continental Profile as AI Leader', short:'International Profile',
+    avgScore:1.7, scoreRange:'1–2', levelName:'Limited', levelNum:1, indicatorCount:9, barColor:'#b82f37',
+    narrative:'South Africa currently exhibits a low profile in international AI indices and relatively limited involvement in global and African AI forums. Although some national AI events are organised, they lack international influence and coordinated follow-through. The overall maturity level for this domain is Limited, with indicator scores ranging from 1 to 2.',
+    considerations:'Develop an integrated international AI engagement strategy. Advance responsible AI leadership aligned with OECD AI Principles. Promote sustainable AI practices aligned with National Development Plan 2030.',
+    indicators:[
+      {name:'Recognition for AI leadership on global indices', subdomain:'Recognition on global AI indices', score:2, notes:'South Africa is acknowledged in multiple global AI indices but positioned in the lower-middle tier. The 2024 Government AI Readiness Index score is 52.91, compared to the USA at 87.03, Singapore at 84.25, and the UK at 78.88.'},
+      {name:'Benchmarking against peer countries (UAE, Kenya, Rwanda, BRICS)', subdomain:'Recognition on global AI indices', score:2, notes:'Low-tier ranking with limited national initiatives to improve benchmarking position. Peer countries such as Kenya and Rwanda are investing more strategically in AI positioning.'},
+      {name:'AI leadership events hosted in South Africa', subdomain:'Hosting and participation in leadership events', score:2, notes:"AI Expo Africa, SingularityU Summit, and Leaderex have been held. AI Expo Africa is Africa's largest B2B AI event attracting 1,700+ delegates annually with 60+ speakers and 10 local AI startups showcased."},
+      {name:'Participation of SA AI leaders in global and African forums', subdomain:'Hosting and participation in leadership events', score:2, notes:'Active participation with some leadership roles. South Africa participated in the Global Inclusivity and AI: Africa (GIAA) Conference in Lagos in September 2024, with 370+ participants including SA government officials, industry leaders, and academics.'},
+      {name:'Recognition for responsible AI development', subdomain:'Responsible AI recognition', score:2, notes:'Some recognition exists through policy documents and institutional frameworks, but limited systematic tracking of responsible AI practices at national level.'},
+      {name:'Funding allocated to green AI R&D', subdomain:'Sustainable AI investment', score:1, notes:'Few or isolated green AI R&D initiatives exist, with limited regulatory support or incentivisation for local AI adoption. No comprehensive funding framework for sustainable AI exists.'},
+      {name:'Government AI procurement policies supporting responsible AI', subdomain:'Sustainable AI procurement', score:1, notes:'Initial identification of need for sustainable AI procurement guidelines. National-level consultations have commenced but no formal procurement framework is in place.'},
+      {name:'Green AI guidelines for energy-efficient models', subdomain:'Sustainable AI procurement', score:1, notes:'Initial identification of need for green AI guidelines. Consultations at national level are beginning, reflecting awareness but no actionable framework yet.'},
+      {name:'Continental AI leadership and engagement', subdomain:'Continental engagement', score:2, notes:'Limited but growing continental AI leadership presence, aligned with AU 2024 Continental AI Strategy commitments. Participation in pan-African AI initiatives increasing.'},
+    ]
+  },
+  {
+    id:2, name:'An Enabling Regulatory Environment', short:'Regulatory Environment',
+    avgScore:2.0, scoreRange:'1–3', levelName:'Emerging', levelNum:2, indicatorCount:9, barColor:'#da861a',
+    narrative:'The regulatory environment is Emerging, with scores ranging from 1 to 3. While different departments are involved in AI-related initiatives, there is no unified AI governance structure. Efforts are fragmented and comprehensive AI-specific regulation is lacking. Parliamentary oversight represents the strongest performer at Level 3.',
+    considerations:'Establish and capacitate a national AI governance structure. Support inter-regulator information sharing. Develop an AI-specific regulatory framework aligned with international standards.',
+    indicators:[
+      {name:'National broad-based AI strategic and/or policy framework', subdomain:'Strategic planning', score:2, notes:'No national AI strategy as of June 2025, but draft frameworks under development by NACI/CSIR/HSRC and DCDT. DCDT national framework published for public comment in late 2024.'},
+      {name:'National AI governance body or government departments', subdomain:'Governance structures', score:2, notes:'No specifically mandated national AI governance body. Several entities (DCDT, DSTI, DTIC) involved with some coordination but no unified structure.'},
+      {name:'AI-specific regulation and laws enacted', subdomain:'Regulatory frameworks', score:1, notes:'Existence of AI-related laws and initial identification of need for AI-specific regulation. Consultations on regulatory needs commenced at national level but no enacted AI law.'},
+      {name:'Government-developed codes of conduct for ethical AI', subdomain:'Codes of conduct', score:2, notes:'No single national AI code of conduct. Dispersed digital policy landscape. Institutional guidelines exist especially in corporate governance and higher education.'},
+      {name:'Parliamentary oversight of AI policy and regulation', subdomain:'Parliamentary oversight', score:3, notes:'DCDT, DSTI, and DTIC drive AI policy. Parliamentary committees perform oversight. CIPC received 1,000+ AI-related patent applications since 2018; granted patents for DABUS AI inventor in 2021.'},
+      {name:'AI regulatory enforcement mechanisms', subdomain:'Regulatory frameworks', score:1, notes:'Limited dedicated enforcement mechanisms for AI-specific regulation. General consumer protection and competition frameworks apply by default.'},
+      {name:'Intellectual property framework for AI', subdomain:'Regulatory frameworks', score:2, notes:'Existing IP statutes being adapted. CIPC granted patents with AI inventor (DABUS). Over 1,000 AI patent applications processed since 2018.'},
+      {name:'Training of public servants in AI competencies', subdomain:'Trained public servants', score:1, notes:'Plans to mainstream AI training in TVET programmes exist in the PC4IR report and National AI Plan, but implementation remains very limited across government departments.'},
+      {name:'Consumer protection in AI applications', subdomain:'Consumer protection', score:2, notes:"Existing consumer protection frameworks applicable. Competition Commission's inquiry on online intermediation platforms provides some AI-relevant guidance."},
+    ]
+  },
+  {
+    id:3, name:'Citizen Engagement With and Empowerment Through AI', short:'Citizen Engagement',
+    avgScore:2.0, scoreRange:'1–4', levelName:'Emerging', levelNum:2, indicatorCount:7, barColor:'#da861a',
+    narrative:'The domain is Emerging with scores ranging from 1 to 4. Public awareness and trust in AI are still low, particularly among marginalised groups. Persistent challenges with internet accessibility and affordability constrain broad-based public participation. Gender parity in internet usage (Score 4) is a notable bright spot.',
+    considerations:'Launch structured public AI awareness campaigns. Address the rural-urban digital divide. Reduce mobile data costs through regulation. Strengthen government-led public engagement on AI.',
+    indicators:[
+      {name:'Mechanism to assess public awareness of AI', subdomain:'Public perception', score:1, notes:'Emerging efforts to systematically track public understanding. IPSOS 2024 AI Monitor covers SA as one of 32 countries. Initial data collection underway but no dedicated national tracking mechanism.'},
+      {name:'Mechanism to assess public attitudes towards AI', subdomain:'Public perception', score:1, notes:'Initial discussions or isolated efforts to understand public attitudes. Low ranking on relevant indices. No systematic national tracking mechanism exists.'},
+      {name:'Government-led AI-related public engagement events', subdomain:'Public engagement', score:1, notes:'Very limited evidence of structured government-led public engagement on AI. National AI policy framework released for public comment in late 2024 was a notable exception.'},
+      {name:'Growth in total population using internet', subdomain:'Access and inclusion', score:3, notes:'Internet usage increased from 49% (2018) to 76% (2022), driven in part by COVID-19. Despite notable progress, high intersectional inequality in access and usage persists.'},
+      {name:'Gender parity in internet usage', subdomain:'Access and inclusion', score:4, notes:'Gender disparity narrowed from 8% (2012) to negligible (2022). However, among those aged over 60, a 53% gender gap persists, posing barriers to accessing digitised government services.'},
+      {name:'Rural/urban parity in internet usage', subdomain:'Access and inclusion', score:3, notes:'Urban-rural disparity has decreased steadily with notable efforts to increase rural access. Gap remained at 20% in 2022 — significant but improving.'},
+      {name:'Mobile data affordability ranking', subdomain:'Access and inclusion', score:2, notes:'Below-average global affordability ranking. High cost of mobile data is one of the leading barriers to internet use in South Africa, particularly affecting low-income households.'},
+    ]
+  },
+  {
+    id:4, name:'AI Research, Development and Innovation', short:'Research & Innovation',
+    avgScore:2.1, scoreRange:'1–3', levelName:'Emerging', levelNum:2, indicatorCount:9, barColor:'#da861a',
+    narrative:'South Africa has an active research community with universities and CSIR producing AI research. However, commercial R&D investment and the startup ecosystem remain underdeveloped. The domain scores as Emerging overall, with strengths in academic publication and some public research investment.',
+    considerations:'Increase targeted public and private investment in AI R&D. Strengthen university-industry-government collaboration. Support AI startup incubation and commercialisation pathways.',
+    indicators:[
+      {name:'Volume of AI research publications', subdomain:'Research output', score:2, notes:'Growing AI publication output from SA universities. CSIR, UCT, Wits, Stellenbosch, and UWC are leading contributors. Output remains limited by global standards.'},
+      {name:'National AI research funding mechanisms', subdomain:'Research funding', score:2, notes:'NRF and CSIR provide some AI research funding. A dedicated national AI R&D fund does not yet exist, limiting scale and focus.'},
+      {name:'AI-focused research centres and institutes', subdomain:'Research infrastructure', score:3, notes:'CAIR (Centre for AI Research), CHPC, and university AI centres are established. CSIR plays a central national coordination role in AI research infrastructure.'},
+      {name:'AI patent applications and grants', subdomain:'Innovation output', score:2, notes:'CIPC received 1,000+ AI patent applications since 2018. Growing but limited by comparison to leading AI nations such as China, USA, and South Korea.'},
+      {name:'AI startup ecosystem activity', subdomain:'Innovation ecosystem', score:2, notes:'Growing startup activity in Johannesburg and Cape Town. Limited structured national support mechanisms for AI startups exist beyond general tech incubators.'},
+      {name:'Corporate AI R&D investment', subdomain:'Research funding', score:1, notes:'Limited evidence of systematic corporate AI R&D investment. Financial services sector leads; manufacturing and agriculture lag significantly behind.'},
+      {name:'Technology transfer and commercialisation', subdomain:'Innovation ecosystem', score:2, notes:'Some tech transfer mechanisms at major universities. The gap between research output and commercial application remains significant.'},
+      {name:'International AI research collaboration', subdomain:'Research output', score:2, notes:'Active participation in international research networks. Bilateral agreements with EU, USA, and African partners exist but could be deepened.'},
+      {name:'Open-source AI contributions', subdomain:'Innovation output', score:2, notes:'Growing open-source AI contributions from SA developers and researchers. Limited by skills availability and lack of corporate incentives for open contribution.'},
+    ]
+  },
+  {
+    id:5, name:'AI Skills, Human Capital and Future of Work', short:'Human Capital',
+    avgScore:1.9, scoreRange:'1–3', levelName:'Emerging', levelNum:2, indicatorCount:8, barColor:'#da861a',
+    narrative:'Human capital development is Emerging. South Africa faces significant AI skills shortages at all levels. While universities are expanding AI-related offerings and some industry training exists, the overall talent pipeline is insufficient to meet growing demand. Particular gaps exist in the public sector and for AI ethics expertise.',
+    considerations:'Scale AI education from secondary through postgraduate levels. Develop industry-recognised AI certification pathways. Address the AI skills gender gap. Mainstream AI literacy in teacher training.',
+    indicators:[
+      {name:'AI-related degree programmes at universities', subdomain:'Education and training', score:3, notes:'Multiple universities offer AI, data science, and ML programmes. UCT, Wits, Stellenbosch, and UWC lead. MOOC uptake is growing but quality and completion rates vary.'},
+      {name:'AI skills in the workforce', subdomain:'Workforce skills', score:2, notes:'Growing but limited AI skills base. Skills concentrated in financial services, tech, and academia. Agriculture, health, and public sectors lag significantly.'},
+      {name:'National AI skills development strategy', subdomain:'Education and training', score:1, notes:'No dedicated national AI skills strategy. Relevant provisions exist in PC4IR report and NDP 2030. NEMISA and PSETA have plans to incorporate AI training but implementation is nascent.'},
+      {name:'Gender parity in AI skills development', subdomain:'Workforce skills', score:2, notes:'Gender gap in AI and data science programmes persists. Women are underrepresented in AI roles, particularly at senior and research levels.'},
+      {name:'Industry-led AI upskilling initiatives', subdomain:'Workforce skills', score:2, notes:'Financial services, tech, and retail sectors running upskilling programmes. Limited cross-sector coordination or national standards for AI upskilling.'},
+      {name:'AI ethics education and expertise', subdomain:'Education and training', score:1, notes:'Very limited dedicated AI ethics curriculum or research capacity in SA. Growing awareness but very few qualified practitioners in responsible AI.'},
+      {name:'AI talent retention', subdomain:'Workforce skills', score:1, notes:'Brain drain of AI talent to international markets is significant. Limited national incentives to retain highly skilled AI professionals in South Africa.'},
+      {name:'Future of work preparedness', subdomain:'Future of work', score:2, notes:"Growing policy attention to AI's impact on employment. Limited concrete reskilling programmes for at-risk workers. NDP 2030 targets increasingly strained."},
+    ]
+  },
+  {
+    id:6, name:'ICT and Digital Infrastructure Supporting AI', short:'Digital Infrastructure',
+    avgScore:2.3, scoreRange:'1–4', levelName:'Emerging', levelNum:2, indicatorCount:8, barColor:'#da861a',
+    narrative:"Digital infrastructure is Emerging, with notable strengths in mobile connectivity and the CHPC's high-performance computing capacity. However, persistent electricity supply challenges, high cloud computing costs, and uneven rural infrastructure access constrain AI adoption. Fibre deployment and 5G rollout are progressing.",
+    considerations:'Accelerate fibre and 5G infrastructure deployment. Address electricity supply reliability as a foundational AI enabler. Develop national cloud computing strategy to reduce costs. Expand CHPC capacity for AI research workloads.',
+    indicators:[
+      {name:'National broadband connectivity coverage', subdomain:'Connectivity', score:3, notes:'Mobile broadband covers most urban areas. Fibre expanding rapidly in metros. Rural connectivity gaps remain significant and hamper equitable AI access.'},
+      {name:'5G rollout and spectrum allocation', subdomain:'Connectivity', score:2, notes:'5G spectrum auctioned in 2022. Commercial rollout underway in major cities. Coverage remains concentrated in metros; rural rollout is nascent.'},
+      {name:'High-performance computing (HPC) capacity', subdomain:'Computing infrastructure', score:3, notes:"CHPC in Cape Town is the continent's leading HPC facility. Capacity is growing but high demand from research and AI applications creates bottlenecks."},
+      {name:'Cloud computing infrastructure and access', subdomain:'Computing infrastructure', score:2, notes:'Major hyperscalers (AWS, Azure, Google) have African data centres. Costs remain high relative to GDP. Data sovereignty concerns around localisation are unresolved.'},
+      {name:'Electricity supply reliability for AI infrastructure', subdomain:'Energy', score:1, notes:'Load shedding remains a significant barrier to reliable AI infrastructure operation. Renewable energy transition is underway but insufficient for industrial AI demands.'},
+      {name:'Data centre capacity and investment', subdomain:'Computing infrastructure', score:2, notes:"SA has the most advanced data centre market in Africa. Johannesburg is sub-Saharan Africa's largest data centre hub. Investment growing but concentrated in metros."},
+      {name:'Internet exchange points (IXPs)', subdomain:'Connectivity', score:3, notes:"JINX (Johannesburg) is one of Africa's largest IXPs. Cape Town IXP is also significant. Strong peering infrastructure reduces latency and cost for AI workloads."},
+      {name:'Open data and government data portals', subdomain:'Data infrastructure', score:4, notes:'data.gov.za and Stats SA portals provide substantial open data. Growing but inconsistent quality and update frequency across departments limits AI utility.'},
+    ]
+  },
+  {
+    id:7, name:'Data and Digital Governance', short:'Data Governance',
+    avgScore:2.2, scoreRange:'1–3', levelName:'Emerging', levelNum:2, indicatorCount:9, barColor:'#da861a',
+    narrative:'Data governance is Emerging. POPIA provides a strong foundational privacy framework, and Stats SA offers quality population data. However, sectoral data sharing frameworks, AI-ready open datasets, and cross-government data interoperability remain underdeveloped.',
+    considerations:'Accelerate POPIA enforcement and awareness. Develop sector-specific data sharing frameworks. Create AI-ready government datasets. Build national data standards and interoperability frameworks.',
+    indicators:[
+      {name:'Personal information protection legislation (POPIA)', subdomain:'Privacy and data protection', score:3, notes:'POPIA enacted and enforceable since July 2021. Information Regulator established. Enforcement capacity building is underway but compliance gaps persist across sectors.'},
+      {name:'Data localisation and sovereignty framework', subdomain:'Data sovereignty', score:2, notes:'National Policy on National Data and Cloud (2024) addresses sovereignty. Practical implementation and enforcement frameworks are still developing.'},
+      {name:'Cross-government data sharing mechanisms', subdomain:'Data sharing', score:1, notes:"Limited formal cross-government data sharing frameworks. Siloed departmental data systems remain the norm. Interoperability standards are lacking, hampering AI initiatives."},
+      {name:'Availability of AI-ready open datasets', subdomain:'Data availability', score:2, notes:'Growing open data availability through data.gov.za. AI-ready, well-documented datasets remain limited. Private sector data largely inaccessible for public benefit AI applications.'},
+      {name:'National statistics and population data quality', subdomain:'Data availability', score:3, notes:'Stats SA provides high-quality demographic, economic, and social data. Regular surveys and censuses. Increasing data linkage capabilities enhance utility.'},
+      {name:'Sectoral data governance frameworks', subdomain:'Data governance', score:2, notes:'Health, financial, and education sectors have emerging data governance frameworks. Sector-specific regulations are developing unevenly across the economy.'},
+      {name:'Data ethics guidelines', subdomain:'Data governance', score:2, notes:'Growing institutional data ethics guidelines particularly in health and finance. No national data ethics council or binding framework exists at present.'},
+      {name:'Data quality standards and management', subdomain:'Data governance', score:2, notes:'Standards exist in specific sectors. A national data quality framework is absent. Government data quality is inconsistent across departments, limiting AI training data utility.'},
+      {name:'Real-time and streaming data infrastructure', subdomain:'Data availability', score:2, notes:'Limited real-time government data infrastructure. Financial sector and some utilities have real-time data capabilities. Most government data is batch-oriented.'},
+    ]
+  },
+  {
+    id:8, name:'Security and Privacy', short:'Security & Privacy',
+    avgScore:1.8, scoreRange:'1–3', levelName:'Limited', levelNum:1, indicatorCount:9, barColor:'#b82f37',
+    narrative:'Security and privacy is rated Limited to Emerging. South Africa has a National Cybersecurity Policy Framework and established CIRT, but implementation gaps remain significant. AI-specific security considerations are largely absent from current frameworks. POPIA provides a privacy baseline but AI-specific privacy risks are not yet addressed.',
+    considerations:'Develop AI-specific cybersecurity guidelines. Strengthen CIRT capacity for AI-related threats. Integrate AI security into the national cybersecurity strategy. Address algorithmic bias as a privacy and security risk.',
+    indicators:[
+      {name:'National cybersecurity policy and strategy', subdomain:'Cybersecurity', score:3, notes:'NCPF (National Cybersecurity Policy Framework) is in place. Revised Cybercrimes Act enacted in 2020. Implementation capacity remains the critical gap — policy without sufficient resourcing.'},
+      {name:'Cyber Incident Response Team (CIRT) capacity', subdomain:'Cybersecurity', score:2, notes:'National CIRT established. Capacity is growing but resource constraints limit effectiveness. Private sector CIRTs are more mature than the government equivalent.'},
+      {name:'AI-specific cybersecurity guidelines', subdomain:'AI security', score:1, notes:'No AI-specific cybersecurity guidelines exist. AI security considerations have not yet been integrated into the NCPF or Cybercrimes Act framework.'},
+      {name:'Biometric data governance', subdomain:'Privacy', score:2, notes:'POPIA covers biometric data. Practical implementation standards are developing. Government ID systems use biometrics but AI-specific safeguards are limited.'},
+      {name:'Algorithmic transparency and explainability requirements', subdomain:'AI security', score:1, notes:'No regulatory requirements for algorithmic transparency or explainability in South Africa. Some institutional guidelines are emerging in the financial services sector.'},
+      {name:'AI-related fraud and deepfake prevention', subdomain:'AI security', score:1, notes:'Growing awareness of AI-enabled fraud risks. No specific regulatory framework exists. The financial sector is developing private-sector responses to AI-enabled fraud.'},
+      {name:'Privacy impact assessments for AI systems', subdomain:'Privacy', score:1, notes:'POPIA encourages privacy impact assessments but AI-specific PIA frameworks are absent. Limited practitioner capacity for AI-focused privacy assessments.'},
+      {name:'Critical infrastructure protection from AI threats', subdomain:'Cybersecurity', score:2, notes:'Critical infrastructure security frameworks exist. AI threat vectors are not specifically addressed. Energy and finance sectors are most advanced in this area.'},
+      {name:'Public sector AI security standards', subdomain:'AI security', score:1, notes:'No AI-specific security standards for public sector AI systems. General ICT security standards apply by default, creating significant gaps for AI deployments.'},
+    ]
+  },
+];
+
+// ── Helpers ──────────────────────────────────────
+function levelClass(n) { return 'level-' + Math.min(n, 5); }
+
+function drawGauge(canvasId, score) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const cx = W/2, cy = H*0.72, R = Math.min(W,H)*0.45;
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, Math.PI, 2*Math.PI);
+  ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.lineWidth = 12; ctx.lineCap = 'round'; ctx.stroke();
+  if (score > 0) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, Math.PI, Math.PI + (score/5)*Math.PI);
+    const g = ctx.createLinearGradient(cx-R, cy, cx+R, cy);
+    g.addColorStop(0,'#b82f37'); g.addColorStop(0.4,'#da861a'); g.addColorStop(0.7,'#39b59d'); g.addColorStop(1,'#0a615f');
+    ctx.strokeStyle = g; ctx.lineWidth = 12; ctx.lineCap = 'round'; ctx.stroke();
+  }
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 22px Georgia,serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(score.toFixed(1), cx, cy-8);
+  ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.font = '10px sans-serif';
+  ctx.fillText('/ 5.0', cx, cy+10);
+}
+
+// ── Domain grid ───────────────────────────────────
+function buildDomainGrid() {
+  document.getElementById('domainGrid').innerHTML = DOMAINS.map((d,i) => `
+    <div class="domain-card" id="dc-${i}" onclick="openDomain(${i})">
+      <div class="domain-num">Domain ${d.id}</div>
+      <div class="domain-name">${d.name}</div>
+      <div class="domain-score-row">
+        <div class="domain-score-big">${d.avgScore.toFixed(1)}</div>
+        <div class="domain-level-label ${levelClass(d.levelNum)}">${d.levelName}</div>
+      </div>
+      <div class="domain-bar-track">
+        <div class="domain-bar-fill" style="width:${(d.avgScore/5*100).toFixed(1)}%;background:${d.barColor};"></div>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:var(--text-muted);">${d.indicatorCount} indicators · Range: ${d.scoreRange}</div>
+    </div>`).join('');
+}
+
+// ── Indicator cards ───────────────────────────────
+function makeIndicatorCard(ind, id) {
+  const lv = MATURITY_LEVELS[Math.round(ind.score)];
+  return `<div class="indicator-card" id="${id}">
+    <div class="indicator-card-header">
+      <div class="indicator-score-dot" style="background:${lv.color};">${ind.score}</div>
+      <div style="flex:1;">
+        <div class="indicator-name">${ind.name}</div>
+        <div class="indicator-subdomain">${ind.subdomain}</div>
+      </div>
+      <div class="domain-level-label ${levelClass(Math.round(ind.score))}" style="flex-shrink:0;">${lv.name}</div>
+      <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="indicator-body"><p>${ind.notes}</p></div>
+  </div>`;
+}
+
+function attachCardListeners(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.querySelectorAll('.indicator-card-header').forEach(header => {
+    header.addEventListener('click', function() {
+      const card = this.closest('.indicator-card');
+      card.classList.toggle('expanded');
+    });
+  });
+}
+
+// ── Open domain ───────────────────────────────────
+function openDomain(idx) {
+  const d = DOMAINS[idx];
+  document.querySelectorAll('.domain-card').forEach((c,i) => c.classList.toggle('active', i===idx));
+
+  const panel = document.getElementById('detailPanel');
+  panel.classList.add('visible');
+  panel.scrollIntoView({behavior:'smooth', block:'start'});
+
+  document.getElementById('detailNum').textContent = `Domain ${d.id}`;
+  document.getElementById('detailTitle').textContent = d.name;
+  document.getElementById('detailScoreRange').innerHTML = `Score range: <strong>${d.scoreRange}</strong>`;
+  document.getElementById('detailIndicatorCount').textContent = `${d.indicatorCount} indicators`;
+
+  const lInfo = MATURITY_LEVELS[d.levelNum];
+  document.getElementById('detailLevelRow').innerHTML = `
+    <div class="detail-level-pill" style="background:${lInfo.color}22;color:${lInfo.color};border:1.5px solid ${lInfo.color}44;">Level ${lInfo.num}: ${lInfo.name}</div>
+    <div class="detail-level-pill" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.6);">Avg: ${d.avgScore.toFixed(1)} / 5.0</div>`;
+
+  drawGauge('gaugeCanvas', d.avgScore);
+
+  document.getElementById('narrativeBox').innerHTML = `
+    <h4>Overall Assessment</h4>
+    <p>${d.narrative}</p>
+    <p><strong>Strategic considerations:</strong> ${d.considerations}</p>`;
+
+  // Level filters
+  const levelsPresent = [...new Set(d.indicators.map(i => Math.round(i.score)))].sort();
+  let activeLevels = new Set(levelsPresent);
+  const filtersEl = document.getElementById('levelFilters');
+  filtersEl.innerHTML = '<span class="level-filter-label">Filter</span>';
+  levelsPresent.forEach(lv => {
+    const li = MATURITY_LEVELS[lv];
+    const btn = document.createElement('div');
+    btn.className = 'level-filter-btn';
+    btn.style.cssText = `background:${li.color}22;color:${li.color};border-color:${li.color}66;`;
+    btn.textContent = `L${lv}: ${li.name}`;
+    btn.addEventListener('click', () => {
+      if (activeLevels.has(lv)) { if (activeLevels.size===1) return; activeLevels.delete(lv); btn.classList.add('inactive'); }
+      else { activeLevels.add(lv); btn.classList.remove('inactive'); }
+      renderAssessmentTab(d, activeLevels);
+    });
+    filtersEl.appendChild(btn);
+  });
+
+  renderAssessmentTab(d, activeLevels);
+  renderAllIndicatorsTab(d);
+  renderLevelsTab(d);
+
+  // Reset to assessment tab
+  document.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.detail-tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelector('.detail-tab[data-tab="assessment"]').classList.add('active');
+  document.getElementById('tab-assessment').classList.add('active');
+}
+
+function renderAssessmentTab(d, activeLevels) {
+  const grid = document.getElementById('indicatorGrid');
+  const filtered = d.indicators.filter(i => activeLevels.has(Math.round(i.score)));
+  grid.innerHTML = filtered.map((ind,j) => makeIndicatorCard(ind, `ind-${j}`)).join('');
+  attachCardListeners('indicatorGrid');
+}
+
+function renderAllIndicatorsTab(d) {
+  const render = query => {
+    const filtered = query
+      ? d.indicators.filter(i => i.name.toLowerCase().includes(query) || i.subdomain.toLowerCase().includes(query) || i.notes.toLowerCase().includes(query))
+      : d.indicators;
+    document.getElementById('allIndicatorGrid').innerHTML =
+      filtered.length
+        ? filtered.map((ind,j) => makeIndicatorCard(ind, `all-${j}`)).join('')
+        : '<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">No indicators match your search.</div>';
+    attachCardListeners('allIndicatorGrid');
+  };
+  render('');
+  document.getElementById('indicatorSearch').oninput = e => render(e.target.value.toLowerCase().trim());
+}
+
+function renderLevelsTab(d) {
+  const rows = MATURITY_LEVELS.map(l => {
+    const inds = d.indicators.filter(i => Math.round(i.score)===l.num);
+    return `<tr>
+      <td style="background:${l.color}11;border-right:3px solid ${l.color};vertical-align:top;white-space:nowrap;">
+        <div style="font-family:'DM Serif Display',serif;font-size:18px;color:${l.color};line-height:1;">${l.num}</div>
+        <div style="font-size:10px;font-weight:700;color:${l.color};letter-spacing:.06em;text-transform:uppercase;margin-top:2px;">${l.name}</div>
+      </td>
+      <td style="vertical-align:top;">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">${l.desc}</div>
+        ${inds.length ? '<div style="display:flex;flex-wrap:wrap;gap:4px;">'+inds.map(i=>`<span style="background:${l.color}15;color:${l.color};font-size:11px;padding:2px 8px;border-radius:4px;font-weight:600;">${i.name}</span>`).join('')+'</div>'
+          : '<span style="font-size:12px;color:var(--text-muted);font-style:italic;">No indicators at this level</span>'}
+      </td>
+    </tr>`;
+  }).join('');
+  document.getElementById('levelsTable').innerHTML = `<thead><tr><th style="width:110px;">Level</th><th>Description &amp; Indicators</th></tr></thead><tbody>${rows}</tbody>`;
+}
+
+// ── Detail tabs ───────────────────────────────────
+document.querySelector('.detail-body') && document.querySelector('.detail-body').addEventListener('click', e => {
+  const tab = e.target.closest('.detail-tab');
+  if (!tab) return;
+  document.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.detail-tab-content').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+});
+
+// ── Nav views ─────────────────────────────────────
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    ['overview','maturity','about'].forEach(v => {
+      const el = document.getElementById('view-' + v);
+      if (el) el.style.display = v === tab.dataset.view ? '' : 'none';
+    });
+    if (tab.dataset.view === 'maturity') {
+      document.getElementById('fullLevelsTable').innerHTML = MATURITY_LEVELS.map(l =>
+        `<tr><td style="font-family:'DM Serif Display',serif;font-size:20px;color:${l.color};padding:10px 14px;">${l.num}</td>
+         <td style="font-weight:700;color:${l.color};padding:10px 14px;white-space:nowrap;">${l.name}</td>
+         <td style="padding:10px 14px;">${l.desc}</td></tr>`).join('');
+    }
+  });
+});
+
+// ── Init ──────────────────────────────────────────
+(function init() {
+  const avg = (DOMAINS.reduce((s,d) => s+d.avgScore, 0)/DOMAINS.length);
+  document.getElementById('overallScore').textContent = avg.toFixed(2);
+  const lv = MATURITY_LEVELS[Math.round(avg)];
+  document.getElementById('overallBadge').textContent = lv.name;
+  document.getElementById('overallBadge').className = `stat-badge ${lv.num<=1?'badge-limited':'badge-emerging'}`;
+  buildDomainGrid();
+})();
+</script>
+</body>
+</html>
